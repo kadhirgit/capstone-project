@@ -104,7 +104,8 @@ workflows:
           repo: eks_orb_capstone_project
           dockerfile: Dockerfile
           path: ~/project/
-          tag: ${CIRCLE_SHA1}
+       #   tag: ${CIRCLE_SHA1}
+          tag: eks_orb_capstone_project:latest 
       
       - aws-eks/create-cluster:
           cluster-name: eks-orb-capstone-project-deployment-${CIRCLE_WORKFLOW_ID:0:7}
