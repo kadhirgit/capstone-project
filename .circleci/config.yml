@@ -53,6 +53,37 @@ jobs:
               docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD 
               docker push reshak/$IMAGE_NAME:$TAG
               
+    setup-cluster:   
+      executor: aws-eks/python3
+      parameters:
+        cluster-name:
+          description: |
+            Name of the EKS cluster
+          type: string
+      steps:
+        - checkout
+        - aws-eks/install-aws-iam-authenticator:
+            release-tag: ''
+        - run:
+            name: Install the eksctl tool
+            command: |
+              if which eksctl > /dev/null; then
+              echo "eksctl is already installed"
+              exit 0
+              fi
+              mkdir -p eksctl_download
+              curl --silent --location --retry 5 "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C eksctl_download
+              chmod +x eksctl_download/eksctl
+              SUDO=""
+              if [ $(id -u) -ne 0 ] && which sudo > /dev/null ; then
+              SUDO="sudo"
+              fi
+              $SUDO mv eksctl_download/eksctl /usr/local/bin/
+              rmdir eksctl_download
+        - aws-eks/create-cluster:
+            cluster-name:eks-orb-capstone-project-deployment-${CIRCLE_WORKFLOW_ID:0:7}
+            aws-region: $AWS_DEFAULT_REGION        
+            
     deploy-application:
       executor: aws-eks/python3
       parameters:
@@ -109,33 +140,10 @@ workflows:
           dockerfile: Dockerfile
           path: ~/project/
           tag: ${CIRCLE_SHA1}
-    
               
-      - aws-eks/install-aws-iam-authenticator:
-            release-tag: ''
-      - run:
-            name: Install the eksctl tool
-            command: |
-              if which eksctl > /dev/null; then
-              echo "eksctl is already installed"
-              exit 0
-              fi
-              mkdir -p eksctl_download
-              curl --silent --location --retry 5 "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C eksctl_download
-              chmod +x eksctl_download/eksctl
-              SUDO=""
-              if [ $(id -u) -ne 0 ] && which sudo > /dev/null ; then
-              SUDO="sudo"
-              fi
-              $SUDO mv eksctl_download/eksctl /usr/local/bin/
-              rmdir eksctl_download
-          
-      
-      - aws-eks/create-cluster:
-          cluster-name: eks-orb-capstone-project-deployment-${CIRCLE_WORKFLOW_ID:0:7}
-          aws-region: $AWS_DEFAULT_REGION
+      - setup-cluster:
           requires:
-            - aws-eks/install-aws-iam-authenticator
+            - aws-ecr/build-and-push-image
       
       - deploy-application:
           cluster-name: eks-orb-capstone-project-deployment-${CIRCLE_WORKFLOW_ID:0:7}
