@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  aws-eks: circleci/aws-eks@1.1.0
+  aws-eks: circleci/aws-eks@0.2.3
   aws-ecr: circleci/aws-ecr@7.2.0
   kubernetes: circleci/kubernetes@0.4.0
   
@@ -108,8 +108,8 @@ workflows:
           repo: eks_orb_capstone_project
           dockerfile: Dockerfile
           path: ~/project/
-       #   tag: ${CIRCLE_SHA1}
-          tag: v${CIRCLE_BUILD_NUM} 
+          tag: ${CIRCLE_SHA1}
+
           
       
       - aws-eks/create-cluster:
