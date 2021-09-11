@@ -144,7 +144,7 @@ workflows:
       - setup-cluster:
           cluster-name: eks-orb-capstone-project-deployment-${CIRCLE_WORKFLOW_ID:0:7}
           requires:
-            - aws-ecr/build-and-push-image
+            - build-and-push-image-ecr
       
       - deploy-application:
           cluster-name: eks-orb-capstone-project-deployment-${CIRCLE_WORKFLOW_ID:0:7}
