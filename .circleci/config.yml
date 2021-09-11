@@ -109,8 +109,6 @@ workflows:
           path: ~/project/
        #   tag: ${CIRCLE_SHA1}
           tag: v${CIRCLE_BUILD_NUM} 
-          requries:
-            - "push-docker-image"
           
       
       - aws-eks/create-cluster:
