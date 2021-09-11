@@ -15,8 +15,24 @@ jobs:
             name: Run Lint
             command: |
               hadolint Dockerfile
-    
+              
+    build-docker-image:
+      docker:
+        - image: circleci/node:13.8.0
+      steps:
+        - checkout
+
+        - setup_remote_docker:
+            version: 19.03.13
+
+        - run:
+            name: Build Docker Image
+            command: |
+              export TAG=v${CIRCLE_BUILD_NUM}
+              export IMAGE_NAME=capstone
+              docker build -t reshak/$IMAGE_NAME:$TAG .
 workflows:
   default:
     jobs:
       - run-lint
+      - build-docker-image
