@@ -152,4 +152,4 @@ workflows:
           docker-image-name: "${AWS_ECR_URL}/eks_orb_capstone_project:${CIRCLE_SHA1}"
           version-info: "${CIRCLE_SHA1}"
           requires:
-            - aws-eks/create-cluster
+            - setup-cluster
