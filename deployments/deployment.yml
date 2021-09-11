@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: capstone
+  labels:
+    app: capstone
+spec:
+  selector:
+    matchLabels:
+      app: capstone
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: capstone
+    spec:
+      containers:
+      - name: app
+        image: reshak/capstone_project:latest
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        ports:
+        - containerPort: 8080
