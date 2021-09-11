@@ -1,5 +1,10 @@
 version: 2.1
 
+orbs:
+  aws-eks: circleci/aws-eks@0.2.3
+  aws-ecr: circleci/aws-ecr@3.1.0
+  kubernetes: circleci/kubernetes@0.4.0
+  
 jobs:
     run-lint:
       docker:
@@ -85,7 +90,31 @@ workflows:
   default:
     jobs:
       - run-lint
+      
       - build-docker-image
+      
       - push-docker-image:
           requires:
             - "build-docker-image"
+            - aws-ecr/build_and_push_image:
+          name: build-and-push-image-ecr
+          account-url: AWS_ECR_URL
+          region: AWS_DEFAULT_REGION
+          repo: eks_orb_capstone_project
+          dockerfile: ~/project/Dockerfile
+          path: ~/project/
+          tag: ${CIRCLE_SHA1}
+      
+      - aws-eks/create-cluster:
+          cluster-name: eks-orb-capstone-project-deployment-${CIRCLE_WORKFLOW_ID:0:7}
+          aws-region: $AWS_DEFAULT_REGION
+          requires:
+            - build-and-push-image-ecr
+      
+      - deploy-application:
+          cluster-name: eks-orb-capstone-project-deployment-${CIRCLE_WORKFLOW_ID:0:7}
+          aws-region: $AWS_DEFAULT_REGION
+          docker-image-name: "${AWS_ECR_URL}/eks_orb_capstone_project:${CIRCLE_SHA1}"
+          version-info: "${CIRCLE_SHA1}"
+          requires:
+            - aws-eks/create-cluster
