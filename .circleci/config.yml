@@ -1,0 +1,22 @@
+version: 2.1
+
+jobs:
+    run-lint:
+      docker:
+        - image: circleci/node:13.8.0
+      steps:
+        - checkout
+        - run:
+            name: install dependencies
+            command: |
+              sudo wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v1.16.3/hadolint-Linux-x86_64
+              sudo chmod +x /bin/hadolint
+        - run:
+            name: Run Lint
+            command: |
+              hadolint Dockerfile
+    
+workflows:
+  default:
+    jobs:
+      - run-lint
