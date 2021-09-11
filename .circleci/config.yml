@@ -47,6 +47,39 @@ jobs:
               docker build -t reshak/$IMAGE_NAME:$TAG .
               docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD 
               docker push reshak/$IMAGE_NAME:$TAG
+              
+    deploy-application:
+      executor: aws-eks/python3
+      parameters:
+        cluster-name:
+          description: |
+            Name of the EKS cluster
+          type: string
+        docker-image-name:
+          description: |
+            Name of the docker image to be deployed
+          type: string
+        version-info:
+          description: |
+            App version information
+          type: string
+        aws-region:
+          description: |
+            AWS region
+          type: string
+          default: "ap-south-1"
+      steps:
+        - checkout
+        - aws-eks/update-kubeconfig-with-authenticator:
+            cluster-name: << parameters.cluster-name >>
+            install-kubectl: true
+            aws-region: << parameters.aws-region >>
+        - kubernetes/create-or-update-resource:
+            resource-file-path: "deployments/deployment.yml"
+            get-rollout-status: true
+            resource-name: deployment/capstone
+        - kubernetes/create-or-update-resource:
+            resource-file-path: "deployments/deployment.yml"
 
 workflows:
   default:
