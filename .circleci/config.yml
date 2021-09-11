@@ -96,7 +96,8 @@ workflows:
       - push-docker-image:
           requires:
             - "build-docker-image"
-            - aws-ecr/build_and_push_image:
+            
+      - aws-ecr/build_and_push_image:
           name: build-and-push-image-ecr
           account-url: AWS_ECR_URL
           region: AWS_DEFAULT_REGION
