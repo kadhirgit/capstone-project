@@ -31,8 +31,28 @@ jobs:
               export TAG=v${CIRCLE_BUILD_NUM}
               export IMAGE_NAME=capstone
               docker build -t reshak/$IMAGE_NAME:$TAG .
+              
+    push-docker-image:
+      docker:
+        - image: circleci/node:13.8.0
+      steps:
+        - checkout
+        - setup_remote_docker:
+            version: 19.03.13
+        - run:
+            name: Push Docker Image to Docker Hub
+            command: |
+              export TAG=v${CIRCLE_BUILD_NUM}
+              export IMAGE_NAME=capstone
+              docker build -t reshak/$IMAGE_NAME:$TAG .
+              docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD 
+              docker push reshak/$IMAGE_NAME:$TAG
+
 workflows:
   default:
     jobs:
       - run-lint
       - build-docker-image
+      - push-docker-image:
+          requires:
+            - "build-docker-image"
