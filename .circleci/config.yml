@@ -92,12 +92,15 @@ workflows:
       - run-lint
       
       - build-docker-image
+          requires:
+            - "run-lint"
       
       - push-docker-image:
           requires:
             - "build-docker-image"
             
       - aws-ecr/build-and-push-image:
+   
           name: build-and-push-image-ecr
           account-url: AWS_ECR_URL
           region: AWS_DEFAULT_REGION
@@ -105,7 +108,10 @@ workflows:
           dockerfile: Dockerfile
           path: ~/project/
        #   tag: ${CIRCLE_SHA1}
-          tag: latest 
+          tag: v${CIRCLE_BUILD_NUM} 
+          requries:
+            - "push-docker-image"
+          
       
       - aws-eks/create-cluster:
           cluster-name: eks-orb-capstone-project-deployment-${CIRCLE_WORKFLOW_ID:0:7}
