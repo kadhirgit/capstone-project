@@ -81,7 +81,7 @@ jobs:
               $SUDO mv eksctl_download/eksctl /usr/local/bin/
               rmdir eksctl_download
         - aws-eks/create-cluster:
-            cluster-name:eks-orb-capstone-project-deployment-${CIRCLE_WORKFLOW_ID:0:7}
+            cluster-name: eks-orb-capstone-project-deployment-${CIRCLE_WORKFLOW_ID:0:7}
             aws-region: $AWS_DEFAULT_REGION        
             
     deploy-application:
