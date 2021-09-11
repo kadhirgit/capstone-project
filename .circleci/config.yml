@@ -113,7 +113,7 @@ workflows:
               
       - aws-eks/install-aws-iam-authenticator:
             release-tag: ''
-        - run:
+      - run:
             name: Install the eksctl tool
             command: |
               if which eksctl > /dev/null; then
