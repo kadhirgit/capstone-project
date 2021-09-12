@@ -61,7 +61,6 @@ jobs:
         - run:
             name: Push Docker Image to Docker Hub
             command: |
-     #         export TAG=v${CIRCLE_BUILD_NUM}
               export TAG=latest
               export IMAGE_NAME=capstone
               docker build -t reshak/$IMAGE_NAME:$TAG .
