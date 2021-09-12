@@ -112,10 +112,36 @@ jobs:
             aws-region: << parameters.aws-region >>
         - kubernetes/create-or-update-resource:
             resource-file-path: "deployments/deployment.yml"
-            get-rollout-status: true
             resource-name: deployment/capstone
-        - kubernetes/create-or-update-resource:
-            resource-file-path: "deployments/deployment.yml"
+
+    test-application:
+        executor: aws-eks/python3
+        parameters:
+          cluster-name:
+            description: |
+              Name of the EKS cluster
+            type: string
+          aws-region:
+            description: |
+              AWS region
+            type: string
+            default: ""
+          expected-version-info:
+            description: |
+              Expected app version (this is used for testing that the
+              correct version has been deployed)
+            type: string
+        steps:
+          - aws-eks/update-kubeconfig-with-authenticator:
+              cluster-name: << parameters.cluster-name >>
+              install-kubectl: true
+              aws-region: << parameters.aws-region >>
+          - run:
+              name: Wait for service to be ready
+              command: |
+                kubectl get pods
+                kubectl get services
+
 
 workflows:
   default:
@@ -155,3 +181,10 @@ workflows:
           version-info: "${CIRCLE_SHA1}"
           requires:
             - setup-cluster
+      
+      - test-application:
+          cluster-name: eks-orb-capstone-project-deployment-${CIRCLE_WORKFLOW_ID:0:7}
+          aws-region: $AWS_DEFAULT_REGION
+          expected-version-info: "${CIRCLE_SHA1}"
+          requires:
+            - deploy-application
