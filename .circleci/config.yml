@@ -322,14 +322,14 @@ workflows:
           requires:
             - test-application
             
-      - undeploy-application:
-          cluster-name: eks-orb-capstone-project-deployment-${CIRCLE_WORKFLOW_ID:0:7}
-          aws-region: $AWS_DEFAULT_REGION
-          requires:
-            - test-application
+  #    - undeploy-application:
+  #        cluster-name: eks-orb-capstone-project-deployment-${CIRCLE_WORKFLOW_ID:0:7}
+  #        aws-region: $AWS_DEFAULT_REGION
+  #        requires:
+  #          - test-application
             
-      - delete-cluster:
-          cluster-name: eks-orb-capstone-project-deployment-${CIRCLE_WORKFLOW_ID:0:7}
-          requires:
-            - undeploy-application
+  #    - delete-cluster:
+  #        cluster-name: eks-orb-capstone-project-deployment-${CIRCLE_WORKFLOW_ID:0:7}
+  #        requires:
+  #          - undeploy-application
       
