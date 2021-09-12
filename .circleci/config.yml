@@ -190,7 +190,7 @@ jobs:
               install-kubectl: true
               aws-region: << parameters.aws-region >>
           - kubernetes/create-or-update-resource:            
-              resource-file-path: "deployment/loadbalancer.yml"
+              resource-file-path: "deployments/loadbalancer.yml"
               resource-name: deployment/capstone              
           - run:
               name: Wait for LB to be ready
@@ -227,6 +227,43 @@ jobs:
             command: |
               kubectl get pods
               
+              
+# ----------------------------------------------------------------------------------------------------------------------------------------
+# Delete cluster, installing eks again to mitigate orbs error
+# ----------------------------------------------------------------------------------------------------------------------------------------
+
+  delete-cluster:   
+      executor: aws-eks/python3
+      parameters:
+        cluster-name:
+          description: |
+            Name of the EKS cluster
+          type: string
+      steps:
+        - checkout
+        - aws-eks/install-aws-iam-authenticator:
+            release-tag: ''
+        - run:
+            name: Install the eksctl tool
+            command: |
+              if which eksctl > /dev/null; then
+              echo "eksctl is already installed"
+              exit 0
+              fi
+              mkdir -p eksctl_download
+              curl --silent --location --retry 5 "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C eksctl_download
+              chmod +x eksctl_download/eksctl
+              SUDO=""
+              if [ $(id -u) -ne 0 ] && which sudo > /dev/null ; then
+              SUDO="sudo"
+              fi
+              $SUDO mv eksctl_download/eksctl /usr/local/bin/
+              rmdir eksctl_download
+        - aws-eks/delete-cluster:
+            cluster-name: << parameters.cluster-name >>
+            aws-region: $AWS_DEFAULT_REGION
+            wait: true            
+            
 workflows:
   default:
     jobs:
@@ -287,11 +324,10 @@ workflows:
           requires:
             - test-application
             
-      - aws-eks/delete-cluster:
+      - delete-cluster:
           cluster-name: eks-orb-capstone-project-deployment-${CIRCLE_WORKFLOW_ID:0:7}
           aws-region: $AWS_DEFAULT_REGION
           wait: true
           requires:
             - undeploy-application
-      
       
