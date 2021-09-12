@@ -330,8 +330,6 @@ workflows:
             
       - delete-cluster:
           cluster-name: eks-orb-capstone-project-deployment-${CIRCLE_WORKFLOW_ID:0:7}
-          aws-region: $AWS_DEFAULT_REGION
-          wait: true
           requires:
             - undeploy-application
       
