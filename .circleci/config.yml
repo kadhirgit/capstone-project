@@ -5,7 +5,13 @@ orbs:
   aws-ecr: circleci/aws-ecr@7.2.0
   kubernetes: circleci/kubernetes@0.4.0
   
+
 jobs:
+
+#  ------------------------------------------------------------------------------------------------------------------------------------------
+#  To lint the Dockerfile
+#  ------------------------------------------------------------------------------------------------------------------------------------------
+
     run-lint:
       docker:
         - image: circleci/node:13.8.0
@@ -21,6 +27,10 @@ jobs:
             command: |
               hadolint Dockerfile
               
+#  ------------------------------------------------------------------------------------------------------------------------------------------
+#  Build the Dockerimage for the application 
+#  ------------------------------------------------------------------------------------------------------------------------------------------
+
     build-docker-image:
       docker:
         - image: circleci/node:13.8.0
@@ -37,6 +47,10 @@ jobs:
               export IMAGE_NAME=capstone
               docker build -t reshak/$IMAGE_NAME:$TAG .
               
+#  -------------------------------------------------------------------------------------------------------------------------------------------
+#  Push the Dockerimage into DockerHub
+#  ------------------------------------------------------------------------------------------------------------------------------------------
+
     push-docker-image:
       docker:
         - image: circleci/node:13.8.0
@@ -53,6 +67,10 @@ jobs:
               docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD 
               docker push reshak/$IMAGE_NAME:$TAG
               
+# ----------------------------------------------------------------------------------------------------------------------------------------
+# Setup cluster to fix the orb error while unzipping the eksctl package  
+# ----------------------------------------------------------------------------------------------------------------------------------------  
+
     setup-cluster:   
       executor: aws-eks/python3
       parameters:
@@ -83,7 +101,10 @@ jobs:
         - aws-eks/create-cluster:
             cluster-name: << parameters.cluster-name >>
             aws-region: $AWS_DEFAULT_REGION        
-            
+ 
+# ----------------------------------------------------------------------------------------------------------------------------------------
+# Deploy the application from AWS ECR image to AWS EKS
+# ---------------------------------------------------------------------------------------------------------------------------------------
     deploy-application:
       executor: aws-eks/python3
       parameters:
@@ -142,6 +163,43 @@ jobs:
                 kubectl get pods
                 kubectl get services
 
+# ----------------------------------------------------------------------------------------------------------------------------------  
+#  To create  LoadBalancer URL for the application as aws-eks orb is not creating LoadBalancer by default
+# ----------------------------------------------------------------------------------------------------------------------------------  
+
+  set-loadbalancer:
+      executor: aws-eks/python3
+      parameters:
+        cluster-name:
+          description: |
+            Name of the EKS cluster
+          type: string
+        aws-region:
+          description: |
+            AWS region
+          type: string
+          default: ""
+        expected-version-info:
+          description: |
+            Expected app version 
+          type: string
+      steps:
+        - checkout
+        - aws-eks/update-kubeconfig-with-authenticator:
+            cluster-name: << parameters.cluster-name >>
+            install-kubectl: true
+            aws-region: << parameters.aws-region >>
+        - kubernetes/create-or-update-resource:            
+            resource-file-path: "deployment/loadbalancer.yml"
+            resource-name: deployment/capstone              
+        - run:
+            name: Wait for LB to be ready
+            command: |         
+              kubectl get service/capstone-service-loadbalancer     
+              
+# ------------------------------------------------------------------------------------------------------------------------------------
+#   Rollback the deployment of the application and run only when needed
+# ------------------------------------------------------------------------------------------------------------------------------------
 
 workflows:
   default:
@@ -188,3 +246,26 @@ workflows:
           expected-version-info: "${CIRCLE_SHA1}"
           requires:
             - deploy-application
+            
+            
+      - set-loadbalancer:
+          cluster-name: eks-orb-capstone-project-deployment-${CIRCLE_WORKFLOW_ID:0:7}
+          aws-region: $AWS_DEFAULT_REGION
+          expected-version-info: "awsdevops"
+          requires:
+            - test-application
+            
+      - undeploy-application:
+          cluster-name: eks-orb-capstone-project-deployment-${CIRCLE_WORKFLOW_ID:0:7}
+          aws-region: $AWS_DEFAULT_REGION
+          requires:
+            - test-application
+            
+      - aws-eks/delete-cluster:
+          cluster-name: eks-orb-capstone-project-deployment-${CIRCLE_WORKFLOW_ID:0:7}
+          aws-region: $AWS_DEFAULT_REGION
+          wait: true
+          requires:
+            - undeploy-application
+      
+      
