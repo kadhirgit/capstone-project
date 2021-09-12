@@ -102,6 +102,8 @@ jobs:
             cluster-name: << parameters.cluster-name >>
             aws-region: $AWS_DEFAULT_REGION   
             node-type: t2.micro
+            ssh-access: true
+            ssh-public-key: udacity
  
 # ----------------------------------------------------------------------------------------------------------------------------------------
 # Deploy the application from AWS ECR image to AWS EKS
