@@ -100,7 +100,8 @@ jobs:
               rmdir eksctl_download
         - aws-eks/create-cluster:
             cluster-name: << parameters.cluster-name >>
-            aws-region: $AWS_DEFAULT_REGION        
+            aws-region: $AWS_DEFAULT_REGION   
+            node-type: t2.micro
  
 # ----------------------------------------------------------------------------------------------------------------------------------------
 # Deploy the application from AWS ECR image to AWS EKS
