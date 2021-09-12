@@ -43,7 +43,8 @@ jobs:
         - run:
             name: Build Docker Image
             command: |
-              export TAG=v${CIRCLE_BUILD_NUM}
+          #    export TAG=v${CIRCLE_BUILD_NUM}
+              export TAG=latest
               export IMAGE_NAME=capstone
               docker build -t reshak/$IMAGE_NAME:$TAG .
               
@@ -61,7 +62,8 @@ jobs:
         - run:
             name: Push Docker Image to Docker Hub
             command: |
-              export TAG=v${CIRCLE_BUILD_NUM}
+     #         export TAG=v${CIRCLE_BUILD_NUM}
+              export TAG=latest
               export IMAGE_NAME=capstone
               docker build -t reshak/$IMAGE_NAME:$TAG .
               docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD 
@@ -290,7 +292,8 @@ workflows:
           repo: eks_orb_capstone_project
           dockerfile: Dockerfile
           path: ~/project/
-          tag: ${CIRCLE_SHA1}
+ #         tag: ${CIRCLE_SHA1}
+          tag: latest
           requires:
             - push-docker-image
               
@@ -302,7 +305,8 @@ workflows:
       - deploy-application:
           cluster-name: eks-orb-capstone-project-deployment-${CIRCLE_WORKFLOW_ID:0:7}
           aws-region: $AWS_DEFAULT_REGION
-          docker-image-name: "${AWS_ECR_URL}/eks_orb_capstone_project:${CIRCLE_SHA1}"
+   #       docker-image-name: "${AWS_ECR_URL}/eks_orb_capstone_project:${CIRCLE_SHA1}"
+          docker-image-name: "${AWS_ECR_URL}/eks_orb_capstone_project:latest"
           version-info: "${CIRCLE_SHA1}"
           requires:
             - setup-cluster
@@ -310,7 +314,8 @@ workflows:
       - test-application:
           cluster-name: eks-orb-capstone-project-deployment-${CIRCLE_WORKFLOW_ID:0:7}
           aws-region: $AWS_DEFAULT_REGION
-          expected-version-info: "${CIRCLE_SHA1}"
+  #        expected-version-info: "${CIRCLE_SHA1}"
+          expected-version-info: latest
           requires:
             - deploy-application
             
@@ -318,7 +323,8 @@ workflows:
       - set-loadbalancer:
           cluster-name: eks-orb-capstone-project-deployment-${CIRCLE_WORKFLOW_ID:0:7}
           aws-region: $AWS_DEFAULT_REGION
-          expected-version-info: "awsdevops"
+  #        expected-version-info: "awsdevops"
+          expected-version-info: latest  
           requires:
             - test-application
             
