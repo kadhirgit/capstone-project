@@ -103,7 +103,7 @@ jobs:
             aws-region: $AWS_DEFAULT_REGION   
             node-type: t2.micro
             ssh-access: true
-            ssh-public-key: udacity
+            ssh-public-key: id_rsa.pub
  
 # ----------------------------------------------------------------------------------------------------------------------------------------
 # Deploy the application from AWS ECR image to AWS EKS
